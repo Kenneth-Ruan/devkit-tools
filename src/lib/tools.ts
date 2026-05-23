@@ -8,8 +8,12 @@ export interface Tool {
 }
 
 export const TOOLS: Tool[] = [
-  // High-volume — universally searched by devs
+  // Top 3
   { slug: 'json-formatter',    name: 'JSON Formatter',        description: 'Format, validate, and minify JSON.',                          category: 'Format',   emoji: '{}',  keywords: ['json formatter', 'json prettifier', 'json validator', 'json beautifier'] },
+  { slug: 'markdown-preview',  name: 'Markdown Preview',      description: 'Live preview Markdown as rendered HTML.',                    category: 'AI',       emoji: '📝',  keywords: ['markdown preview', 'markdown editor', 'markdown renderer online'] },
+  { slug: 'html-preview',      name: 'HTML Preview',          description: 'Render and preview HTML in real time.',                      category: 'AI',       emoji: '🌐',  keywords: ['html preview', 'html renderer online', 'html live preview'] },
+
+  // High-volume — universally searched by devs
   { slug: 'base64',            name: 'Base64',                description: 'Encode and decode Base64 strings.',                          category: 'Encode',   emoji: '🔐',  keywords: ['base64 encoder', 'base64 decoder', 'base64 encode decode'] },
   { slug: 'url-encode',        name: 'URL Encode / Decode',   description: 'Percent-encode and decode URLs.',                            category: 'Encode',   emoji: '🔗',  keywords: ['url encoder', 'url decoder', 'percent encode', 'urlencode'] },
   { slug: 'timestamp',         name: 'Timestamp Converter',   description: 'Convert Unix epoch timestamps to readable dates.',           category: 'Convert',  emoji: '🕐',  keywords: ['epoch converter', 'unix timestamp converter', 'epoch to datetime', 'timestamp to date'] },
@@ -22,9 +26,12 @@ export const TOOLS: Tool[] = [
   { slug: 'color-converter',   name: 'Color Converter',       description: 'Convert between HEX, RGB, HSL, and HSV colors.',            category: 'Convert',  emoji: '🎨',  keywords: ['color converter', 'hex to rgb', 'rgb to hex', 'color picker', 'hsl converter'] },
   { slug: 'lorem-ipsum',       name: 'Lorem Ipsum',           description: 'Generate lorem ipsum placeholder text.',                    category: 'Generate', emoji: '📰',  keywords: ['lorem ipsum generator', 'placeholder text', 'dummy text generator'] },
 
+  // AI-focused tools
+  { slug: 'token-estimator',   name: 'Token Estimator',       description: 'Estimate GPT / Claude token count for any text.',           category: 'AI',       emoji: '🤖',  keywords: ['token estimator', 'token counter', 'gpt token count', 'claude tokens'] },
+  { slug: 'mermaid-preview',   name: 'Mermaid Preview',       description: 'Render Mermaid diagrams from text.',                         category: 'AI',       emoji: '🧜',  keywords: ['mermaid preview', 'mermaid diagram', 'mermaid renderer online'] },
+
   // Mid-volume — popular among devs
   { slug: 'html-formatter',    name: 'HTML Formatter',        description: 'Beautify and minify HTML.',                                   category: 'Format',   emoji: '🌐',  keywords: ['html formatter', 'html beautifier', 'html minifier'] },
-  { slug: 'markdown-preview',  name: 'Markdown Preview',      description: 'Live preview Markdown as rendered HTML.',                    category: 'Preview',  emoji: '📝',  keywords: ['markdown preview', 'markdown editor', 'markdown renderer online'] },
   { slug: 'case-converter',    name: 'Case Converter',        description: 'Convert text between camelCase, snake_case, kebab-case.',   category: 'Convert',  emoji: 'Aa',  keywords: ['case converter', 'camelcase', 'snake_case', 'kebab-case', 'pascalcase'] },
   { slug: 'json-to-yaml',      name: 'JSON ↔ YAML',           description: 'Convert between JSON and YAML formats.',                    category: 'Convert',  emoji: '🔄',  keywords: ['json to yaml', 'yaml to json', 'json yaml converter'] },
   { slug: 'html-entities',     name: 'HTML Entities',         description: 'Encode and decode HTML entities.',                           category: 'Encode',   emoji: '&lt;', keywords: ['html entity encoder', 'html entities', 'html encode decode'] },
@@ -36,16 +43,14 @@ export const TOOLS: Tool[] = [
   { slug: 'number-base',       name: 'Number Base',           description: 'Convert between decimal, hex, binary, and octal.',          category: 'Convert',  emoji: '🔢',  keywords: ['number base converter', 'decimal to hex', 'hex to binary', 'base converter'] },
 
   // Niche / developer-specific
-  { slug: 'token-estimator',   name: 'Token Estimator',       description: 'Estimate GPT / Claude token count for any text.',           category: 'Text',     emoji: '🤖',  keywords: ['token estimator', 'token counter', 'gpt token count', 'claude tokens'] },
   { slug: 'curl-to-fetch',     name: 'cURL → Fetch',          description: 'Convert cURL commands to JavaScript fetch().',              category: 'Convert',  emoji: '⚡',  keywords: ['curl to fetch', 'curl to javascript', 'curl converter'] },
-  { slug: 'html-preview',      name: 'HTML Preview',          description: 'Render and preview HTML in real time.',                      category: 'Preview',  emoji: '🌐',  keywords: ['html preview', 'html renderer online', 'html live preview'] },
-  { slug: 'mermaid-preview',   name: 'Mermaid Preview',       description: 'Render Mermaid diagrams from text.',                         category: 'Preview',  emoji: '🧜',  keywords: ['mermaid preview', 'mermaid diagram', 'mermaid renderer online'] },
   { slug: 'json-schema',       name: 'JSON Schema Generator', description: 'Generate a JSON Schema from a JSON example.',               category: 'Generate', emoji: '🧬',  keywords: ['json schema generator', 'json to schema', 'generate json schema'] },
   { slug: 'cron-parser',       name: 'Cron Parser',           description: 'Parse and explain cron expressions in plain English.',      category: 'Text',     emoji: '⏰',  keywords: ['cron parser', 'cron expression', 'cron explainer', 'cron validator'] },
   { slug: 'dotenv-parser',     name: '.env Parser',           description: 'Parse .env files into a clean key-value table.',            category: 'Text',     emoji: '⚙️',  keywords: ['.env parser', 'env file parser', 'dotenv viewer'] },
 ];
 
-export const CATEGORIES = [...new Set(TOOLS.map((t) => t.category))];
+const allCategories = [...new Set(TOOLS.map((t) => t.category))];
+export const CATEGORIES = ['AI', ...allCategories.filter((c) => c !== 'AI')];
 
 export function getToolBySlug(slug: string) {
   return TOOLS.find((t) => t.slug === slug);
