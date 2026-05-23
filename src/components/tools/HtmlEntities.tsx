@@ -1,15 +1,6 @@
 'use client';
 import { useState } from 'react';
-
-function encodeEntities(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/`/g, '&#96;');
-}
+import { encodeEntities } from '@/lib/transforms';
 
 function decodeEntities(text: string): string {
   const textarea = typeof document !== 'undefined'

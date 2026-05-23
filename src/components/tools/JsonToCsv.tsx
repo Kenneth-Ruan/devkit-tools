@@ -1,27 +1,6 @@
 'use client';
 import { useState } from 'react';
-
-function jsonToCsv(json: string): string {
-  const data = JSON.parse(json);
-  const arr = Array.isArray(data) ? data : [data];
-  if (arr.length === 0) return '';
-  const keys = Object.keys(arr[0]);
-  const esc = (v: unknown) => {
-    const s = String(v ?? '');
-    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  return [keys.join(','), ...arr.map((row) => keys.map((k) => esc(row[k])).join(','))].join('\n');
-}
-
-function csvToJson(csv: string): string {
-  const lines = csv.trim().split('\n');
-  const headers = lines[0].split(',').map((h) => h.trim());
-  const rows = lines.slice(1).map((line) => {
-    const vals = line.split(',');
-    return Object.fromEntries(headers.map((h, i) => [h, vals[i]?.trim() ?? '']));
-  });
-  return JSON.stringify(rows, null, 2);
-}
+import { jsonToCsv, csvToJson } from '@/lib/transforms';
 
 export default function JsonToCsv() {
   const [mode, setMode] = useState<'to-csv' | 'to-json'>('to-csv');

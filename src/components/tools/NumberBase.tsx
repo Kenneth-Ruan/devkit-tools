@@ -1,5 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
+import { convertNumberBase } from '@/lib/transforms';
 
 const BASES: { label: string; base: number; prefix: string; pattern: RegExp }[] = [
   { label: 'Decimal (Base 10)',  base: 10, prefix: '',   pattern: /^-?\d+$/ },
@@ -12,23 +13,7 @@ export default function NumberBase() {
   const [input, setInput] = useState('');
   const [fromBase, setFromBase] = useState(10);
 
-  const result = useMemo(() => {
-    const raw = input.trim().replace(/^0[xXbBoO]/, '');
-    if (!raw) return null;
-    try {
-      const n = parseInt(raw, fromBase);
-      if (isNaN(n)) return null;
-      return {
-        decimal: n.toString(10),
-        hex: n.toString(16).toUpperCase(),
-        hexPrefixed: '0x' + n.toString(16).toUpperCase(),
-        binary: n.toString(2),
-        binaryPrefixed: '0b' + n.toString(2),
-        octal: n.toString(8),
-        octalPrefixed: '0o' + n.toString(8),
-      };
-    } catch { return null; }
-  }, [input, fromBase]);
+  const result = useMemo(() => convertNumberBase(input, fromBase), [input, fromBase]);
 
   const rows = result ? [
     ['Decimal', result.decimal],

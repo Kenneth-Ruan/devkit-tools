@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { minifyHtml } from '@/lib/transforms';
 
 export default function HtmlFormatter() {
   const [input, setInput] = useState('');
@@ -18,7 +19,7 @@ export default function HtmlFormatter() {
   }
 
   function minify() {
-    setOutput(input.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim());
+    setOutput(minifyHtml(input));
     setError('');
   }
 

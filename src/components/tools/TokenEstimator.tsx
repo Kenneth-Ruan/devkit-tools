@@ -1,11 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-
-function estimateTokens(text: string) {
-  if (!text) return 0;
-  // ~4 chars per token (OpenAI/Anthropic rough average)
-  return Math.ceil(text.length / 4);
-}
+import { estimateTokens } from '@/lib/transforms';
 
 const PRICING: { model: string; input: number; output: number }[] = [
   { model: 'GPT-4o',             input: 0.0025, output: 0.01 },

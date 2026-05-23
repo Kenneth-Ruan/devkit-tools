@@ -4,6 +4,19 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { TOOLS, CATEGORIES } from '@/lib/tools';
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Dev Tooling Online',
+  url: 'https://devtooling.online',
+  description: 'Free online developer tools: JSON formatter, Base64, URL encoder, timestamp converter, regex tester, and 25+ more. No login required.',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://devtooling.online/?q={search_term_string}',
+    'query-input': 'required name=search_term_string',
+  },
+};
+
 export default function HomePage() {
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -17,10 +30,11 @@ export default function HomePage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-black text-white mb-3">⚡ DevKit</h1>
+        <h1 className="text-4xl font-black text-white mb-3">⚡ Dev Tooling Online</h1>
         <p className="text-slate-400 text-lg max-w-xl mx-auto">
-          30+ developer tools. No login. No tracking. Just tools.
+          30+ developer tools. No login required. Just tools.
         </p>
       </div>
 
@@ -73,7 +87,7 @@ export default function HomePage() {
       )}
 
       <footer className="mt-16 text-center text-xs text-slate-600">
-        DevKit — free developer utilities. No ads, no login.
+        Dev Tooling Online — free, lightweight developer utilities. Secure — no backends, no login required.
       </footer>
     </div>
   );

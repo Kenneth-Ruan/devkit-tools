@@ -1,13 +1,6 @@
 'use client';
 import { useState } from 'react';
-
-function generateV4() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (crypto.getRandomValues(new Uint8Array(1))[0] & 0x0f) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
+import { generateV4 } from '@/lib/transforms';
 
 export default function UuidGenerator() {
   const [count, setCount] = useState(5);

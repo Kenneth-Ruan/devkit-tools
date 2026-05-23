@@ -1,39 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-
-type DiffLine = { type: 'same' | 'add' | 'remove'; text: string; lineA?: number; lineB?: number };
-
-function diff(a: string, b: string): DiffLine[] {
-  const aLines = a.split('\n');
-  const bLines = b.split('\n');
-  const m = aLines.length, n = bLines.length;
-
-  // Simple LCS-based diff
-  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-  for (let i = m - 1; i >= 0; i--) {
-    for (let j = n - 1; j >= 0; j--) {
-      dp[i][j] = aLines[i] === bLines[j]
-        ? dp[i + 1][j + 1] + 1
-        : Math.max(dp[i + 1][j], dp[i][j + 1]);
-    }
-  }
-
-  const result: DiffLine[] = [];
-  let i = 0, j = 0, la = 1, lb = 1;
-  while (i < m || j < n) {
-    if (i < m && j < n && aLines[i] === bLines[j]) {
-      result.push({ type: 'same', text: aLines[i], lineA: la++, lineB: lb++ });
-      i++; j++;
-    } else if (j < n && (i >= m || dp[i][j + 1] >= dp[i + 1][j])) {
-      result.push({ type: 'add', text: bLines[j], lineB: lb++ });
-      j++;
-    } else {
-      result.push({ type: 'remove', text: aLines[i], lineA: la++ });
-      i++;
-    }
-  }
-  return result;
-}
+import { diff, type DiffLine } from '@/lib/transforms';
 
 export default function TextDiff() {
   const [textA, setTextA] = useState('');

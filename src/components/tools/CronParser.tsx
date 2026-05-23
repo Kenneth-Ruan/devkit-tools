@@ -1,5 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
+import { parseCron } from '@/lib/transforms';
 
 const COMMON = [
   { label: 'Every minute',       value: '* * * * *' },
@@ -14,45 +15,6 @@ const COMMON = [
   { label: 'Every Sunday midnight', value: '0 0 * * 0' },
 ];
 
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-
-function explainField(val: string, type: 'minute'|'hour'|'dom'|'month'|'dow'): string {
-  if (val === '*') return 'every ' + type;
-  if (val.startsWith('*/')) return `every ${val.slice(2)} ${type}s`;
-  const range = val.match(/^(\d+)-(\d+)$/);
-  if (range) {
-    if (type === 'month') return `${MONTHS[+range[1]-1]}–${MONTHS[+range[2]-1]}`;
-    if (type === 'dow') return `${DAYS[+range[1]]}–${DAYS[+range[2]]}`;
-    return `${type} ${range[1]} to ${range[2]}`;
-  }
-  const list = val.split(',');
-  if (list.length > 1) {
-    if (type === 'month') return list.map((m) => MONTHS[+m-1]).join(', ');
-    if (type === 'dow') return list.map((d) => DAYS[+d]).join(', ');
-    return `${type}s ${list.join(', ')}`;
-  }
-  if (type === 'month') return MONTHS[+val - 1] ?? val;
-  if (type === 'dow') return DAYS[+val] ?? val;
-  return val;
-}
-
-function parseCron(expr: string): { description: string; nextRuns: string[] } | { error: string } {
-  const parts = expr.trim().split(/\s+/);
-  if (parts.length !== 5) return { error: 'Expected 5 fields: minute hour day-of-month month day-of-week' };
-  const [min, hr, dom, mon, dow] = parts;
-  try {
-    const desc = [
-      `At ${explainField(min, 'minute')} of ${explainField(hr, 'hour')}`,
-      dom !== '*' ? `, on day ${explainField(dom, 'dom')} of the month` : '',
-      mon !== '*' ? `, in ${explainField(mon, 'month')}` : '',
-      dow !== '*' ? `, on ${explainField(dow, 'dow')}` : '',
-    ].join('').trim().replace(/^At every minute of every hour$/, 'Every minute') + '.';
-    return { description: desc, nextRuns: [] };
-  } catch {
-    return { error: 'Could not parse expression.' };
-  }
-}
 
 export default function CronParser() {
   const [input, setInput] = useState('0 9 * * 1-5');

@@ -81,7 +81,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     keywords: tool.keywords,
     alternates: { canonical: `/tools/${slug}` },
     openGraph: {
-      title: `${tool.name} | DevKit`,
+      title: `${tool.name} | Dev Tooling Online`,
       description: tool.description,
       url: `/tools/${slug}`,
     },
@@ -96,8 +96,20 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
   const Component = TOOL_COMPONENTS[slug];
   if (!Component) notFound();
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: `${tool.name} | Dev Tooling Online`,
+    url: `https://devtooling.online/tools/${slug}`,
+    description: tool.description,
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Any',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  };
+
   return (
     <ToolLayout name={tool.name} description={tool.description}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Component />
     </ToolLayout>
   );

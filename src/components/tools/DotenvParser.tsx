@@ -1,27 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-
-interface EnvVar { key: string; value: string; comment?: string }
-
-function parseEnv(raw: string): EnvVar[] {
-  return raw.split('\n').flatMap((line) => {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) return [];
-    const eqIdx = trimmed.indexOf('=');
-    if (eqIdx < 0) return [];
-    const key = trimmed.slice(0, eqIdx).trim();
-    let value = trimmed.slice(eqIdx + 1).trim();
-    // Remove inline comments only if outside quotes
-    const commentIdx = value.search(/\s+#/);
-    let comment: string | undefined;
-    if (!value.startsWith('"') && !value.startsWith("'") && commentIdx > 0) {
-      comment = value.slice(commentIdx + 1).replace(/^#\s*/, '');
-      value = value.slice(0, commentIdx).trim();
-    }
-    value = value.replace(/^(['"])(.*)\1$/, '$2');
-    return [{ key, value, comment }];
-  });
-}
+import { parseEnv, type EnvVar } from '@/lib/transforms';
 
 export default function DotenvParser() {
   const [input, setInput] = useState('');

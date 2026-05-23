@@ -1,28 +1,6 @@
 'use client';
 import { useState } from 'react';
-
-function inferType(val: unknown): object {
-  if (val === null) return { type: 'null' };
-  if (typeof val === 'boolean') return { type: 'boolean' };
-  if (typeof val === 'number') return Number.isInteger(val) ? { type: 'integer' } : { type: 'number' };
-  if (typeof val === 'string') return { type: 'string' };
-  if (Array.isArray(val)) {
-    if (val.length === 0) return { type: 'array', items: {} };
-    return { type: 'array', items: inferType(val[0]) };
-  }
-  if (typeof val === 'object') {
-    const props: Record<string, object> = {};
-    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
-      props[k] = inferType(v);
-    }
-    return {
-      type: 'object',
-      properties: props,
-      required: Object.keys(val as object),
-    };
-  }
-  return {};
-}
+import { inferType } from '@/lib/transforms';
 
 export default function JsonSchema() {
   const [input, setInput] = useState('');

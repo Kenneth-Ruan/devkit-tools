@@ -1,16 +1,8 @@
 'use client';
 import { useState, useMemo } from 'react';
+import { toCamel, toPascal, toSnake, toKebab, toScream, toTitle, toSentence, toDot, toFlat } from '@/lib/transforms';
 
-function toCamel(s: string) { return s.toLowerCase().replace(/[_\-\s]+(.)/g, (_, c) => c.toUpperCase()); }
-function toPascal(s: string) { const c = toCamel(s); return c.charAt(0).toUpperCase() + c.slice(1); }
-function toSnake(s: string) { return s.replace(/([A-Z])/g, '_$1').replace(/[-\s]+/g, '_').toLowerCase().replace(/^_/, ''); }
-function toKebab(s: string) { return toSnake(s).replace(/_/g, '-'); }
-function toScream(s: string) { return toSnake(s).toUpperCase(); }
-function toTitle(s: string) { return s.toLowerCase().replace(/(^|\s)\S/g, (l) => l.toUpperCase()); }
-function toSentence(s: string) { const t = s.toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); }
-function toDot(s: string) { return toSnake(s).replace(/_/g, '.'); }
-function toConstant(s: string) { return toScream(s); }
-function toFlat(s: string) { return toSnake(s).replace(/_/g, ''); }
+const toConstant = toScream;
 
 const CASES = [
   { key: 'camel',    label: 'camelCase',         fn: toCamel },

@@ -1,19 +1,11 @@
 'use client';
 import { useState, useMemo } from 'react';
+import { countStats } from '@/lib/transforms';
 
 export default function WordCounter() {
   const [text, setText] = useState('');
 
-  const stats = useMemo(() => {
-    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-    const chars = text.length;
-    const charsNoSpace = text.replace(/\s/g, '').length;
-    const lines = text ? text.split('\n').length : 0;
-    const sentences = text.trim() ? (text.match(/[.!?]+/g) ?? []).length : 0;
-    const paragraphs = text.trim() ? text.split(/\n\s*\n/).filter(Boolean).length : 0;
-    const readingMinutes = Math.max(1, Math.ceil(words / 200));
-    return { words, chars, charsNoSpace, lines, sentences, paragraphs, readingMinutes };
-  }, [text]);
+  const stats = useMemo(() => countStats(text), [text]);
 
   const topWords = useMemo(() => {
     if (!text.trim()) return [];

@@ -1,33 +1,6 @@
 'use client';
 import { useState } from 'react';
-
-const KEYWORDS = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'BETWEEN', 'LIKE', 'IS', 'NULL',
-  'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN',
-  'OUTER JOIN', 'FULL JOIN', 'CROSS JOIN', 'ON', 'AS', 'INSERT INTO', 'VALUES', 'UPDATE', 'SET',
-  'DELETE FROM', 'CREATE TABLE', 'ALTER TABLE', 'DROP TABLE', 'INDEX', 'UNIQUE', 'PRIMARY KEY',
-  'FOREIGN KEY', 'REFERENCES', 'CONSTRAINT', 'WITH', 'UNION', 'ALL', 'DISTINCT', 'CASE', 'WHEN',
-  'THEN', 'ELSE', 'END', 'EXISTS', 'ASC', 'DESC', 'RETURNING'];
-
-function formatSql(sql: string, indent: number): string {
-  let s = sql.trim();
-  const INDENT = ' '.repeat(indent);
-  const breakBefore = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'ORDER BY', 'GROUP BY', 'HAVING',
-    'LIMIT', 'OFFSET', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'OUTER JOIN', 'FULL JOIN',
-    'CROSS JOIN', 'ON', 'UNION', 'RETURNING'];
-
-  const pattern = new RegExp(`\\b(${breakBefore.join('|')})\\b`, 'gi');
-  s = s.replace(pattern, '\n$1');
-  const lines = s.split('\n').map((l) => l.trim()).filter(Boolean);
-
-  return lines.map((line, i) => {
-    const upper = line.toUpperCase();
-    const kw = KEYWORDS.find((k) => upper.startsWith(k));
-    if (!kw || i === 0) return line;
-    const isTopLevel = ['SELECT', 'FROM', 'WHERE', 'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET', 'JOIN',
-      'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'OUTER JOIN', 'FULL JOIN', 'CROSS JOIN', 'UNION', 'RETURNING'].includes(kw);
-    return isTopLevel ? line : INDENT + line;
-  }).join('\n');
-}
+import { formatSql } from '@/lib/transforms';
 
 export default function SqlFormatter() {
   const [input, setInput] = useState('');

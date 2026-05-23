@@ -1,12 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-
-function b64decode(str: string) {
-  const padded = str.replace(/-/g, '+').replace(/_/g, '/');
-  const pad = padded.length % 4;
-  const s = pad ? padded + '='.repeat(4 - pad) : padded;
-  try { return JSON.parse(atob(s)); } catch { return null; }
-}
+import { b64decode } from '@/lib/transforms';
 
 export default function JwtDecoder() {
   const [token, setToken] = useState('');

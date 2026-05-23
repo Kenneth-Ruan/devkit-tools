@@ -5,7 +5,7 @@ export default function ToolLayout({ name, description, children }: { name: stri
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-[#2a2d3a] px-4 py-3 flex items-center gap-4">
         <Link href="/" className="text-slate-400 hover:text-white transition text-sm font-semibold">
-          ⚡ DevKit
+          ⚡ Dev Tooling Online
         </Link>
         <span className="text-[#2a2d3a]">/</span>
         <span className="text-white text-sm font-semibold">{name}</span>
