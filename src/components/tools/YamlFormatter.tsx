@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-import yaml from 'js-yaml';
+import { parseYaml, dumpYaml } from '@/lib/transforms';
 import SplitPane from '@/components/SplitPane';
 
 export default function YamlFormatter() {
@@ -10,8 +10,8 @@ export default function YamlFormatter() {
   const { output, error } = useMemo(() => {
     if (!input.trim()) return { output: '', error: '' };
     try {
-      const parsed = yaml.load(input);
-      const result = mode === 'format' ? yaml.dump(parsed, { indent: 2 }) : JSON.stringify(parsed, null, 2);
+      const parsed = parseYaml(input);
+      const result = mode === 'format' ? dumpYaml(parsed) : JSON.stringify(parsed, null, 2);
       return { output: result, error: '' };
     } catch (e) {
       return { output: '', error: (e as Error).message };

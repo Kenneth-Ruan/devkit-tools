@@ -17,6 +17,10 @@ import {
   countStats,
   md5,
   generateV4,
+  parseMarkdown,
+  parseYaml,
+  dumpYaml,
+  formatHtml,
 } from './transforms';
 
 // ─── Case Converter ───────────────────────────────────────────────────────────
@@ -593,5 +597,76 @@ describe('generateV4', () => {
   it('generates unique UUIDs', () => {
     const uuids = new Set(Array.from({ length: 100 }, generateV4));
     expect(uuids.size).toBe(100);
+  });
+});
+
+// ─── Markdown (marked) ────────────────────────────────────────────────────────
+// These tests catch marked API changes (e.g. v18 changed call signature)
+
+describe('parseMarkdown', () => {
+  it('returns a string, not a Promise', () => {
+    const result = parseMarkdown('# Hello');
+    expect(typeof result).toBe('string');
+  });
+  it('renders heading', () => {
+    expect(parseMarkdown('# Hello')).toContain('<h1>');
+  });
+  it('renders bold', () => {
+    expect(parseMarkdown('**bold**')).toContain('<strong>');
+  });
+  it('renders inline code', () => {
+    expect(parseMarkdown('`code`')).toContain('<code>');
+  });
+  it('renders fenced code block', () => {
+    expect(parseMarkdown('```js\nconst x = 1;\n```')).toContain('<code');
+  });
+  it('renders link', () => {
+    expect(parseMarkdown('[text](https://example.com)')).toContain('<a ');
+  });
+});
+
+// ─── YAML (js-yaml) ───────────────────────────────────────────────────────────
+
+describe('parseYaml', () => {
+  it('parses simple key-value', () => {
+    expect(parseYaml('name: John\nage: 30')).toEqual({ name: 'John', age: 30 });
+  });
+  it('parses nested objects', () => {
+    expect(parseYaml('a:\n  b: 1')).toEqual({ a: { b: 1 } });
+  });
+  it('parses arrays', () => {
+    expect(parseYaml('- a\n- b')).toEqual(['a', 'b']);
+  });
+  it('throws on invalid YAML', () => {
+    expect(() => parseYaml('{')).toThrow();
+  });
+});
+
+describe('dumpYaml', () => {
+  it('dumps object to YAML string', () => {
+    const result = dumpYaml({ name: 'John', age: 30 });
+    expect(result).toContain('name: John');
+    expect(result).toContain('age: 30');
+  });
+  it('round-trips through parseYaml', () => {
+    const obj = { a: 1, b: [1, 2, 3], c: { d: true } };
+    expect(parseYaml(dumpYaml(obj))).toEqual(obj);
+  });
+});
+
+// ─── HTML Beautify (js-beautify) ──────────────────────────────────────────────
+
+describe('formatHtml', () => {
+  it('returns a string', () => {
+    expect(typeof formatHtml('<div><p>hi</p></div>')).toBe('string');
+  });
+  it('adds indentation', () => {
+    const result = formatHtml('<div><p>hi</p></div>');
+    expect(result).toContain('\n');
+  });
+  it('respects indent size', () => {
+    const r2 = formatHtml('<div><p>hi</p></div>', 2);
+    const r4 = formatHtml('<div><p>hi</p></div>', 4);
+    expect(r2).not.toBe(r4);
   });
 });

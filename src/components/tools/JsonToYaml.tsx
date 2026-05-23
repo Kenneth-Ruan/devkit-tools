@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-import yaml from 'js-yaml';
+import { parseYaml, dumpYaml } from '@/lib/transforms';
 import SplitPane from '@/components/SplitPane';
 
 type Mode = 'json-to-yaml' | 'yaml-to-json';
@@ -13,9 +13,9 @@ export default function JsonToYaml() {
     if (!input.trim()) return { output: '', error: '' };
     try {
       if (mode === 'json-to-yaml') {
-        return { output: yaml.dump(JSON.parse(input), { indent: 2 }), error: '' };
+        return { output: dumpYaml(JSON.parse(input)), error: '' };
       } else {
-        return { output: JSON.stringify(yaml.load(input), null, 2), error: '' };
+        return { output: JSON.stringify(parseYaml(input), null, 2), error: '' };
       }
     } catch (e) {
       return { output: '', error: (e as Error).message };

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { marked } from 'marked';
+import { parseMarkdown } from '@/lib/transforms';
 import SplitPane from '@/components/SplitPane';
 
 const SAMPLE = `# Hello, Markdown!
@@ -44,7 +44,7 @@ export default function MarkdownPreview() {
   const [showCheat, setShowCheat] = useState(false);
 
   useEffect(() => {
-    setHtml(marked.parse(input) as string);
+    setHtml(parseMarkdown(input));
   }, [input]);
 
   return (

@@ -458,6 +458,33 @@ export function md5(str: string): string {
   }).join('');
 }
 
+// ─── Markdown ────────────────────────────────────────────────────────────────
+// Wrapped so tests catch third-party API changes (e.g. marked v18 changed its call signature)
+
+import { marked } from 'marked';
+export function parseMarkdown(text: string): string {
+  const result = marked.parse(text);
+  if (typeof result !== 'string') throw new Error('marked.parse() did not return a string — check marked version');
+  return result;
+}
+
+// ─── YAML ─────────────────────────────────────────────────────────────────────
+
+import yaml from 'js-yaml';
+export function parseYaml(text: string): unknown {
+  return yaml.load(text);
+}
+export function dumpYaml(data: unknown, indent = 2): string {
+  return yaml.dump(data, { indent });
+}
+
+// ─── HTML Beautify ────────────────────────────────────────────────────────────
+
+import { html as _beautifyHtml } from 'js-beautify';
+export function formatHtml(text: string, indentSize = 2): string {
+  return _beautifyHtml(text, { indent_size: indentSize, max_preserve_newlines: 1 });
+}
+
 // ─── UUID Generator ───────────────────────────────────────────────────────────
 
 export function generateV4(): string {

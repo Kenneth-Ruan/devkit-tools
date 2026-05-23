@@ -1,23 +1,20 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { minifyHtml } from '@/lib/transforms';
+import { useState, useMemo } from 'react';
+import { minifyHtml, formatHtml } from '@/lib/transforms';
 import SplitPane from '@/components/SplitPane';
 
 export default function HtmlFormatter() {
   const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
-  const [error, setError] = useState('');
   const [mode, setMode] = useState<'format' | 'minify'>('format');
   const [indent, setIndent] = useState(2);
 
-  useEffect(() => {
-    if (!input.trim()) { setOutput(''); setError(''); return; }
-    if (mode === 'minify') { setOutput(minifyHtml(input)); setError(''); return; }
-    let cancelled = false;
-    import('js-beautify').then(({ html: beautify }) => {
-      if (!cancelled) { setOutput(beautify(input, { indent_size: indent, max_preserve_newlines: 1 })); setError(''); }
-    }).catch((e) => { if (!cancelled) setError((e as Error).message); });
-    return () => { cancelled = true; };
+  const { output, error } = useMemo(() => {
+    if (!input.trim()) return { output: '', error: '' };
+    try {
+      return { output: mode === 'minify' ? minifyHtml(input) : formatHtml(input, indent), error: '' };
+    } catch (e) {
+      return { output: '', error: (e as Error).message };
+    }
   }, [input, mode, indent]);
 
   return (
