@@ -1,20 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { encodeEntities } from '@/lib/transforms';
-
-function decodeEntities(text: string): string {
-  const textarea = typeof document !== 'undefined'
-    ? Object.assign(document.createElement('textarea'), { innerHTML: text })
-    : null;
-  if (textarea) return textarea.value;
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#96;/g, '`');
-}
+import { useState, useMemo } from 'react';
+import { encodeEntities, decodeEntities } from '@/lib/transforms';
 
 const REFERENCE = [
   { entity: '&amp;',   char: '&',  desc: 'Ampersand' },
@@ -36,26 +22,24 @@ const REFERENCE = [
 export default function HtmlEntities() {
   const [mode, setMode] = useState<'encode' | 'decode'>('encode');
   const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
 
-  function run() {
-    setOutput(mode === 'encode' ? encodeEntities(input) : decodeEntities(input));
-  }
+  const output = useMemo(() => {
+    if (!input) return '';
+    return mode === 'encode' ? encodeEntities(input) : decodeEntities(input);
+  }, [input, mode]);
 
   return (
     <div className="space-y-4">
       <div className="flex gap-2 flex-wrap">
         <button onClick={() => setMode('encode')} className={mode === 'encode' ? 'btn-primary' : 'btn-secondary'}>Encode</button>
         <button onClick={() => setMode('decode')} className={mode === 'decode' ? 'btn-primary' : 'btn-secondary'}>Decode</button>
-        <button onClick={run} className="btn-primary">Run</button>
         {output && <button onClick={() => navigator.clipboard.writeText(output)} className="btn-secondary ml-auto">Copy</button>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-xs text-slate-500 mb-1 block">Input</label>
-          <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={10}
-            className="tool-textarea"
+          <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={10} className="tool-textarea"
             placeholder={mode === 'encode' ? '<div class="hello">World & More</div>' : '&lt;div&gt;Hello &amp; World&lt;/div&gt;'} />
         </div>
         <div>

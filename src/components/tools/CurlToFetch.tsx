@@ -1,20 +1,16 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { parseCurl } from '@/lib/transforms';
 
 export default function CurlToFetch() {
   const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
 
-  function convert() {
-    setOutput(parseCurl(input));
-  }
+  const output = useMemo(() => (input.trim() ? parseCurl(input) : ''), [input]);
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
-        <button onClick={convert} className="btn-primary">Convert</button>
-        {output && <button onClick={() => navigator.clipboard.writeText(output)} className="btn-secondary ml-auto">Copy</button>}
+      <div className="flex justify-end">
+        {output && <button onClick={() => navigator.clipboard.writeText(output)} className="btn-secondary">Copy</button>}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

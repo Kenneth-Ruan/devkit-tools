@@ -1,47 +1,37 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 export default function JsonFormatter() {
   const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
-  const [error, setError] = useState('');
+  const [mode, setMode] = useState<'format' | 'minify'>('format');
   const [indent, setIndent] = useState(2);
 
-  function format() {
+  const { output, error } = useMemo(() => {
+    if (!input.trim()) return { output: '', error: '' };
     try {
       const parsed = JSON.parse(input);
-      setOutput(JSON.stringify(parsed, null, indent));
-      setError('');
+      return { output: mode === 'format' ? JSON.stringify(parsed, null, indent) : JSON.stringify(parsed), error: '' };
     } catch (e) {
-      setError((e as Error).message);
-      setOutput('');
+      return { output: '', error: (e as Error).message };
     }
-  }
-
-  function minify() {
-    try {
-      setOutput(JSON.stringify(JSON.parse(input)));
-      setError('');
-    } catch (e) {
-      setError((e as Error).message);
-      setOutput('');
-    }
-  }
+  }, [input, mode, indent]);
 
   return (
     <div className="space-y-4">
       <div className="flex gap-2 items-center flex-wrap">
-        <button onClick={format} className="btn-primary">Format</button>
-        <button onClick={minify} className="btn-secondary">Minify</button>
-        <label className="text-sm text-slate-400 flex items-center gap-2">
-          Indent:
-          <select value={indent} onChange={(e) => setIndent(Number(e.target.value))}
-            className="bg-[#1a1d27] border border-[#2a2d3a] rounded px-2 py-1 text-sm text-white">
-            <option value={2}>2 spaces</option>
-            <option value={4}>4 spaces</option>
-            <option value={1}>1 space</option>
-          </select>
-        </label>
+        <button onClick={() => setMode('format')} className={mode === 'format' ? 'btn-primary' : 'btn-secondary'}>Format</button>
+        <button onClick={() => setMode('minify')} className={mode === 'minify' ? 'btn-primary' : 'btn-secondary'}>Minify</button>
+        {mode === 'format' && (
+          <label className="text-sm text-slate-400 flex items-center gap-2">
+            Indent:
+            <select value={indent} onChange={(e) => setIndent(Number(e.target.value))}
+              className="bg-[#1a1d27] border border-[#2a2d3a] rounded px-2 py-1 text-sm text-white">
+              <option value={2}>2 spaces</option>
+              <option value={4}>4 spaces</option>
+              <option value={1}>1 space</option>
+            </select>
+          </label>
+        )}
         {output && <button onClick={() => navigator.clipboard.writeText(output)} className="btn-secondary ml-auto">Copy</button>}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

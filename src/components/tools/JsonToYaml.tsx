@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import yaml from 'js-yaml';
 
 type Mode = 'json-to-yaml' | 'yaml-to-json';
@@ -7,31 +7,25 @@ type Mode = 'json-to-yaml' | 'yaml-to-json';
 export default function JsonToYaml() {
   const [mode, setMode] = useState<Mode>('json-to-yaml');
   const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
-  const [error, setError] = useState('');
 
-  function convert() {
-    setError('');
+  const { output, error } = useMemo(() => {
+    if (!input.trim()) return { output: '', error: '' };
     try {
       if (mode === 'json-to-yaml') {
-        const parsed = JSON.parse(input);
-        setOutput(yaml.dump(parsed, { indent: 2 }));
+        return { output: yaml.dump(JSON.parse(input), { indent: 2 }), error: '' };
       } else {
-        const parsed = yaml.load(input);
-        setOutput(JSON.stringify(parsed, null, 2));
+        return { output: JSON.stringify(yaml.load(input), null, 2), error: '' };
       }
     } catch (e) {
-      setError((e as Error).message);
-      setOutput('');
+      return { output: '', error: (e as Error).message };
     }
-  }
+  }, [input, mode]);
 
   return (
     <div className="space-y-4">
       <div className="flex gap-2 flex-wrap items-center">
         <button onClick={() => setMode('json-to-yaml')} className={mode === 'json-to-yaml' ? 'btn-primary' : 'btn-secondary'}>JSON → YAML</button>
         <button onClick={() => setMode('yaml-to-json')} className={mode === 'yaml-to-json' ? 'btn-primary' : 'btn-secondary'}>YAML → JSON</button>
-        <button onClick={convert} className="btn-primary ml-2">Convert</button>
         {output && <button onClick={() => navigator.clipboard.writeText(output)} className="btn-secondary ml-auto">Copy</button>}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -43,7 +37,8 @@ export default function JsonToYaml() {
         </div>
         <div>
           <label className="text-xs text-slate-500 mb-1 block">{mode === 'json-to-yaml' ? 'YAML' : 'JSON'} Output</label>
-          {error ? <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-400 text-sm">{error}</div>
+          {error
+            ? <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-400 text-sm">{error}</div>
             : <textarea readOnly value={output} rows={18} className="tool-textarea opacity-80" />}
         </div>
       </div>
