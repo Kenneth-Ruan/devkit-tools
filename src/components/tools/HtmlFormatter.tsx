@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { minifyHtml } from '@/lib/transforms';
+import SplitPane from '@/components/SplitPane';
 
 export default function HtmlFormatter() {
   const [input, setInput] = useState('');
@@ -11,20 +12,11 @@ export default function HtmlFormatter() {
 
   useEffect(() => {
     if (!input.trim()) { setOutput(''); setError(''); return; }
-    if (mode === 'minify') {
-      setOutput(minifyHtml(input));
-      setError('');
-      return;
-    }
+    if (mode === 'minify') { setOutput(minifyHtml(input)); setError(''); return; }
     let cancelled = false;
     import('js-beautify').then(({ html: beautify }) => {
-      if (!cancelled) {
-        setOutput(beautify(input, { indent_size: indent, max_preserve_newlines: 1 }));
-        setError('');
-      }
-    }).catch((e) => {
-      if (!cancelled) setError((e as Error).message);
-    });
+      if (!cancelled) { setOutput(beautify(input, { indent_size: indent, max_preserve_newlines: 1 })); setError(''); }
+    }).catch((e) => { if (!cancelled) setError((e as Error).message); });
     return () => { cancelled = true; };
   }, [input, mode, indent]);
 
@@ -44,19 +36,23 @@ export default function HtmlFormatter() {
         )}
         {output && <button onClick={() => navigator.clipboard.writeText(output)} className="btn-secondary ml-auto">Copy</button>}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">Input HTML</label>
-          <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={20}
-            placeholder="<div><p>Hello</p></div>" className="tool-textarea" />
-        </div>
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">Output</label>
-          {error
-            ? <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-400 text-sm">{error}</div>
-            : <textarea readOnly value={output} rows={20} className="tool-textarea opacity-80" />}
-        </div>
-      </div>
+      <SplitPane
+        left={
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Input HTML</label>
+            <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={20}
+              placeholder="<div><p>Hello</p></div>" className="tool-textarea" />
+          </div>
+        }
+        right={
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Output</label>
+            {error
+              ? <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-400 text-sm">{error}</div>
+              : <textarea readOnly value={output} rows={20} className="tool-textarea opacity-80" />}
+          </div>
+        }
+      />
     </div>
   );
 }

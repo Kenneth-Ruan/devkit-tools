@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { encodeEntities, decodeEntities } from '@/lib/transforms';
+import SplitPane from '@/components/SplitPane';
 
 const REFERENCE = [
   { entity: '&amp;',   char: '&',  desc: 'Ampersand' },
@@ -36,17 +37,21 @@ export default function HtmlEntities() {
         {output && <button onClick={() => navigator.clipboard.writeText(output)} className="btn-secondary ml-auto">Copy</button>}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">Input</label>
-          <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={10} className="tool-textarea"
-            placeholder={mode === 'encode' ? '<div class="hello">World & More</div>' : '&lt;div&gt;Hello &amp; World&lt;/div&gt;'} />
-        </div>
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">Output</label>
-          <textarea readOnly value={output} rows={10} className="tool-textarea opacity-80" />
-        </div>
-      </div>
+      <SplitPane
+        left={
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Input</label>
+            <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={10} className="tool-textarea"
+              placeholder={mode === 'encode' ? '<div class="hello">World & More</div>' : '&lt;div&gt;Hello &amp; World&lt;/div&gt;'} />
+          </div>
+        }
+        right={
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Output</label>
+            <textarea readOnly value={output} rows={10} className="tool-textarea opacity-80" />
+          </div>
+        }
+      />
 
       <div className="bg-[#1a1d27] border border-[#2a2d3a] rounded-xl overflow-hidden">
         <div className="px-4 py-2 border-b border-[#2a2d3a] text-xs text-slate-500">Common HTML Entities</div>

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
+import SplitPane from '@/components/SplitPane';
 
 function stripJsonc(text: string): string {
   let result = '';
@@ -35,6 +36,24 @@ function getErrorLoc(input: string, err: Error): { line: number; col: number } |
   return { line: lines.length, col: lines[lines.length - 1].length + 1 };
 }
 
+const LINE_H = '1.375rem'; // 22px — matches textarea line-height
+
+function LineGutter({ lines, errorLine, scrollRef }: { lines: string[]; errorLine?: number; scrollRef: React.RefObject<HTMLDivElement | null> }) {
+  return (
+    <div
+      ref={scrollRef}
+      className="overflow-hidden shrink-0 select-none bg-[#0a0c12] border-r border-[#2a2d3a] py-3 text-right font-mono text-sm text-slate-600"
+      style={{ minWidth: '2.75rem' }}
+    >
+      {lines.map((_, i) => (
+        <div key={i} className={`px-2 ${errorLine === i + 1 ? 'text-red-400 font-bold' : ''}`} style={{ lineHeight: LINE_H }}>
+          {i + 1}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function JsonFormatter() {
   const [input, setInput] = useState('');
   const [mode, setMode] = useState<'format' | 'minify'>('format');
@@ -42,6 +61,9 @@ export default function JsonFormatter() {
   const [showLines, setShowLines] = useState(false);
   const [jsonc, setJsonc] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputGutterRef = useRef<HTMLDivElement>(null);
+  const outputGutterRef = useRef<HTMLDivElement>(null);
+  const outputScrollRef = useRef<HTMLDivElement>(null);
 
   const { output, error, errorLoc } = useMemo(() => {
     if (!input.trim()) return { output: '', error: '', errorLoc: null };
@@ -60,15 +82,86 @@ export default function JsonFormatter() {
     }
   }, [input, mode, indent, jsonc]);
 
+  // Scroll input to error line
   useEffect(() => {
     if (!errorLoc || !inputRef.current) return;
     const el = inputRef.current;
     const lines = input.split('\n');
-    const lineHeight = el.scrollHeight / Math.max(lines.length, 1);
-    el.scrollTop = lineHeight * Math.max(0, errorLoc.line - 4);
+    const lineH = el.scrollHeight / Math.max(lines.length, 1);
+    el.scrollTop = lineH * Math.max(0, errorLoc.line - 4);
   }, [errorLoc, input]);
 
-  const outputLines = output.split('\n');
+  function syncInputGutter(e: React.UIEvent<HTMLTextAreaElement>) {
+    if (inputGutterRef.current) inputGutterRef.current.scrollTop = e.currentTarget.scrollTop;
+  }
+
+  function syncOutputGutter(e: React.UIEvent<HTMLDivElement>) {
+    if (outputGutterRef.current) outputGutterRef.current.scrollTop = e.currentTarget.scrollTop;
+  }
+
+  const inputLines = input ? input.split('\n') : [''];
+  const outputLines = output ? output.split('\n') : [];
+
+  const inputPanel = (
+    <div>
+      <label className="text-xs text-slate-500 mb-1 block">
+        Input JSON{jsonc && <span className="ml-2 text-indigo-400">JSONC</span>}
+      </label>
+      {showLines ? (
+        <div className={`flex rounded-lg overflow-hidden border ${error ? 'border-red-700' : 'border-[#2a2d3a] focus-within:border-indigo-500'} bg-[#0f1117]`}>
+          <LineGutter lines={inputLines} errorLine={errorLoc?.line} scrollRef={inputGutterRef} />
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onScroll={syncInputGutter}
+            rows={18}
+            placeholder='{"key": "value"}'
+            className="flex-1 bg-transparent outline-none p-3 text-sm font-mono text-slate-200 resize-y"
+            style={{ lineHeight: LINE_H }}
+          />
+        </div>
+      ) : (
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          rows={18}
+          placeholder='{"key": "value"}'
+          className={`tool-textarea ${error ? 'border-red-700 focus:border-red-600' : ''}`}
+        />
+      )}
+      {errorLoc && <p className="mt-1 text-xs text-red-400 font-mono">↑ Line {errorLoc.line}, Col {errorLoc.col}</p>}
+    </div>
+  );
+
+  const outputPanel = (
+    <div>
+      <label className="text-xs text-slate-500 mb-1 block">Output</label>
+      {error ? (
+        <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-400 text-sm space-y-1">
+          <p>{error}</p>
+          {errorLoc && <p className="font-mono text-xs text-red-500">Line {errorLoc.line}, Col {errorLoc.col}</p>}
+        </div>
+      ) : showLines ? (
+        <div className="flex rounded-lg overflow-hidden border border-[#2a2d3a] bg-[#0f1117]" style={{ minHeight: '18rem' }}>
+          <LineGutter lines={outputLines} scrollRef={outputGutterRef} />
+          <div
+            className="flex-1 overflow-auto p-3 text-sm font-mono text-slate-200"
+            style={{ lineHeight: LINE_H }}
+            onScroll={syncOutputGutter}
+            ref={outputScrollRef}
+          >
+            {outputLines.map((line, i) => (
+              <div key={i} className="whitespace-pre hover:bg-white/[0.03]" style={{ lineHeight: LINE_H }}>{line}</div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <textarea readOnly value={output} rows={18} className="tool-textarea opacity-80" />
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -88,59 +181,15 @@ export default function JsonFormatter() {
             </select>
           </label>
         )}
-        <button onClick={() => setShowLines((v) => !v)}
-          className={showLines ? 'btn-primary' : 'btn-secondary'}
-          title="Toggle line numbers on output">
+        <button onClick={() => setShowLines((v) => !v)} className={showLines ? 'btn-primary' : 'btn-secondary'} title="Toggle line numbers">
           # Lines
         </button>
-        <button onClick={() => setJsonc((v) => !v)}
-          className={jsonc ? 'btn-primary' : 'btn-secondary'}
-          title="Allow // and /* */ comments (JSONC format used in tsconfig, .eslintrc, etc.)">
+        <button onClick={() => setJsonc((v) => !v)} className={jsonc ? 'btn-primary' : 'btn-secondary'} title="Allow // and /* */ comments">
           JSONC
         </button>
         {output && <button onClick={() => navigator.clipboard.writeText(output)} className="btn-secondary ml-auto">Copy</button>}
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">
-            Input JSON{jsonc && <span className="ml-2 text-indigo-400">JSONC</span>}
-          </label>
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            rows={18}
-            placeholder='{"key": "value"}'
-            className={`tool-textarea ${error ? 'border-red-700 focus:border-red-600' : ''}`}
-          />
-          {errorLoc && (
-            <p className="mt-1 text-xs text-red-400 font-mono">↑ Line {errorLoc.line}, Col {errorLoc.col}</p>
-          )}
-        </div>
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">Output</label>
-          {error ? (
-            <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-400 text-sm space-y-1">
-              <p>{error}</p>
-              {errorLoc && <p className="font-mono text-xs text-red-500">Line {errorLoc.line}, Col {errorLoc.col}</p>}
-            </div>
-          ) : showLines ? (
-            <div className="bg-[#0f1117] border border-[#2a2d3a] rounded-lg overflow-auto font-mono text-sm text-slate-200" style={{ minHeight: '18rem', maxHeight: '60vh' }}>
-              {outputLines.map((line, i) => (
-                <div key={i} className="flex hover:bg-white/[0.03] leading-5">
-                  <span className="px-2 text-right text-slate-600 select-none shrink-0 border-r border-[#2a2d3a]" style={{ minWidth: '3rem' }}>
-                    {i + 1}
-                  </span>
-                  <span className="px-3 whitespace-pre">{line}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <textarea readOnly value={output} rows={18} className="tool-textarea opacity-80" />
-          )}
-        </div>
-      </div>
+      <SplitPane left={inputPanel} right={outputPanel} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { diff, type DiffLine } from '@/lib/transforms';
+import { diff } from '@/lib/transforms';
+import SplitPane from '@/components/SplitPane';
 
 export default function TextDiff() {
   const [textA, setTextA] = useState('');
@@ -12,18 +13,22 @@ export default function TextDiff() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">Original (A)</label>
-          <textarea value={textA} onChange={(e) => setTextA(e.target.value)}
-            rows={10} className="tool-textarea" placeholder="Original text..." />
-        </div>
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">Modified (B)</label>
-          <textarea value={textB} onChange={(e) => setTextB(e.target.value)}
-            rows={10} className="tool-textarea" placeholder="Modified text..." />
-        </div>
-      </div>
+      <SplitPane
+        left={
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Original (A)</label>
+            <textarea value={textA} onChange={(e) => setTextA(e.target.value)}
+              rows={10} className="tool-textarea" placeholder="Original text..." />
+          </div>
+        }
+        right={
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Modified (B)</label>
+            <textarea value={textB} onChange={(e) => setTextB(e.target.value)}
+              rows={10} className="tool-textarea" placeholder="Modified text..." />
+          </div>
+        }
+      />
 
       {lines.length > 0 && (
         <>

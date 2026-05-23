@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import yaml from 'js-yaml';
+import SplitPane from '@/components/SplitPane';
 
 type Mode = 'json-to-yaml' | 'yaml-to-json';
 
@@ -28,20 +29,24 @@ export default function JsonToYaml() {
         <button onClick={() => setMode('yaml-to-json')} className={mode === 'yaml-to-json' ? 'btn-primary' : 'btn-secondary'}>YAML → JSON</button>
         {output && <button onClick={() => navigator.clipboard.writeText(output)} className="btn-secondary ml-auto">Copy</button>}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">{mode === 'json-to-yaml' ? 'JSON' : 'YAML'} Input</label>
-          <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={18}
-            placeholder={mode === 'json-to-yaml' ? '{"name": "John", "age": 30}' : 'name: John\nage: 30'}
-            className="tool-textarea" />
-        </div>
-        <div>
-          <label className="text-xs text-slate-500 mb-1 block">{mode === 'json-to-yaml' ? 'YAML' : 'JSON'} Output</label>
-          {error
-            ? <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-400 text-sm">{error}</div>
-            : <textarea readOnly value={output} rows={18} className="tool-textarea opacity-80" />}
-        </div>
-      </div>
+      <SplitPane
+        left={
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">{mode === 'json-to-yaml' ? 'JSON' : 'YAML'} Input</label>
+            <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={18}
+              placeholder={mode === 'json-to-yaml' ? '{"name": "John", "age": 30}' : 'name: John\nage: 30'}
+              className="tool-textarea" />
+          </div>
+        }
+        right={
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">{mode === 'json-to-yaml' ? 'YAML' : 'JSON'} Output</label>
+            {error
+              ? <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-400 text-sm">{error}</div>
+              : <textarea readOnly value={output} rows={18} className="tool-textarea opacity-80" />}
+          </div>
+        }
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme inline {
   --color-bg: #0f1117;
@@ -20,6 +21,17 @@ body {
 
 textarea, input {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Draggable split pane */
+.split-pane-left {
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .split-pane-left {
+    width: var(--split, 50%);
+    flex-shrink: 0;
+  }
 }
 
 .tool-textarea {
