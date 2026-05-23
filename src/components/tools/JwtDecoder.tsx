@@ -5,11 +5,13 @@ import { b64decode } from '@/lib/transforms';
 export default function JwtDecoder() {
   const [token, setToken] = useState('');
 
+  type JwtPayload = Record<string, unknown> & { exp?: number; iat?: number; sub?: string };
+
   const decoded = useMemo(() => {
     const parts = token.trim().split('.');
     if (parts.length !== 3) return null;
-    const header = b64decode(parts[0]);
-    const payload = b64decode(parts[1]);
+    const header = b64decode(parts[0]) as Record<string, unknown>;
+    const payload = b64decode(parts[1]) as JwtPayload;
     if (!header || !payload) return null;
     return { header, payload, signature: parts[2] };
   }, [token]);
