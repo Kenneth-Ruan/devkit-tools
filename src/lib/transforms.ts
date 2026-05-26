@@ -494,3 +494,234 @@ export function generateV4(): string {
     return v.toString(16);
   });
 }
+
+// ─── JSON → XML ───────────────────────────────────────────────────────────────
+
+function _escXml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+function _valToXml(value: unknown, tag: string, depth: number): string {
+  const pad = '  '.repeat(depth);
+  if (value === null || value === undefined) return `${pad}<${tag}/>`;
+  if (typeof value !== 'object') return `${pad}<${tag}>${_escXml(String(value))}</${tag}>`;
+  if (Array.isArray(value)) {
+    const item = tag.endsWith('s') ? tag.slice(0, -1) : 'item';
+    return (value as unknown[]).map((v) => _valToXml(v, item, depth)).join('\n');
+  }
+  const children = Object.entries(value as Record<string, unknown>)
+    .map(([k, v]) => _valToXml(v, k, depth + 1))
+    .join('\n');
+  return `${pad}<${tag}>\n${children}\n${pad}</${tag}>`;
+}
+
+export function jsonToXml(json: string, rootTag = 'root'): string {
+  const parsed = JSON.parse(json) as unknown;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n${_valToXml(parsed, rootTag, 0)}`;
+}
+
+// ─── JSON → TSV ───────────────────────────────────────────────────────────────
+
+export function jsonToTsv(json: string): string {
+  const data = JSON.parse(json) as unknown;
+  const arr = Array.isArray(data) ? data as Record<string, unknown>[] : [data as Record<string, unknown>];
+  if (!arr.length) return '';
+  const keys = Object.keys(arr[0]);
+  const esc = (v: unknown) => String(v ?? '').replace(/\t/g, ' ').replace(/\n/g, ' ');
+  return [keys.join('\t'), ...arr.map((row) => keys.map((k) => esc(row[k])).join('\t'))].join('\n');
+}
+
+export function tsvToJson(tsv: string): string {
+  const lines = tsv.trim().split('\n');
+  const headers = lines[0].split('\t');
+  const rows = lines.slice(1).map((line) => {
+    const vals = line.split('\t');
+    return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']));
+  });
+  return JSON.stringify(rows, null, 2);
+}
+
+// ─── XML Formatter ────────────────────────────────────────────────────────────
+
+export function formatXml(xml: string): string {
+  const s = xml.replace(/>\s+</g, '><').trim();
+  let result = '';
+  let depth = 0;
+  let i = 0;
+
+  while (i < s.length) {
+    if (s[i] !== '<') {
+      const end = s.indexOf('<', i);
+      const text = (end === -1 ? s.slice(i) : s.slice(i, end)).trim();
+      if (text) result += '  '.repeat(Math.max(0, depth)) + text + '\n';
+      i = end === -1 ? s.length : end;
+      continue;
+    }
+    const end = s.indexOf('>', i) + 1;
+    if (end === 0) break;
+    const tag = s.slice(i, end);
+    i = end;
+
+    if (tag.startsWith('<?') || tag.startsWith('<!')) {
+      result += '  '.repeat(Math.max(0, depth)) + tag + '\n';
+    } else if (tag.startsWith('</')) {
+      depth = Math.max(0, depth - 1);
+      result += '  '.repeat(depth) + tag + '\n';
+    } else if (tag.endsWith('/>')) {
+      result += '  '.repeat(depth) + tag + '\n';
+    } else {
+      result += '  '.repeat(depth) + tag + '\n';
+      depth++;
+    }
+  }
+  return result.trim();
+}
+
+export function minifyXml(xml: string): string {
+  return xml.replace(/>\s+</g, '><').replace(/\s+/g, ' ').trim();
+}
+
+// ─── CSS Formatter / Minifier ─────────────────────────────────────────────────
+
+export function formatCss(css: string): string {
+  const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '').trim();
+  const result: string[] = [];
+  let depth = 0;
+  const rules = stripped.split(/(?<=})|(?<={[^}]*?;[^}]*?)(?=\s*[a-z-]+\s*:)/i);
+
+  // Simple token-by-token formatter
+  let s = stripped
+    .replace(/\{/g, ' {\n')
+    .replace(/\}/g, '\n}\n')
+    .replace(/;(?!\s*\})/g, ';\n');
+
+  const lines = s.split('\n');
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line === '}') {
+      depth = Math.max(0, depth - 1);
+      result.push('  '.repeat(depth) + '}');
+    } else if (line.endsWith('{')) {
+      result.push('  '.repeat(depth) + line);
+      depth++;
+    } else {
+      result.push('  '.repeat(depth) + line);
+    }
+  }
+  void rules; // suppress unused warning
+  return result.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+export function minifyCss(css: string): string {
+  return css
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*([{}:;,>~+])\s*/g, '$1')
+    .replace(/;}/g, '}')
+    .trim();
+}
+
+// ─── YAML → XML / CSV ─────────────────────────────────────────────────────────
+
+export function yamlToXml(yamlStr: string, rootTag = 'root'): string {
+  const parsed = parseYaml(yamlStr);
+  return jsonToXml(JSON.stringify(parsed), rootTag);
+}
+
+export function yamlToCsv(yamlStr: string): string {
+  const parsed = parseYaml(yamlStr);
+  return jsonToCsv(JSON.stringify(parsed));
+}
+
+// ─── JSON Escape ──────────────────────────────────────────────────────────────
+
+export function jsonEscapeString(s: string): string {
+  return JSON.stringify(s).slice(1, -1);
+}
+
+export function jsonUnescapeString(s: string): string {
+  return JSON.parse('"' + s + '"') as string;
+}
+
+// ─── XML Escape ───────────────────────────────────────────────────────────────
+
+export function xmlEscape(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+export function xmlUnescape(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
+
+// ─── JSON Compare ─────────────────────────────────────────────────────────────
+
+export type JsonDiffEntry = {
+  path: string;
+  type: 'added' | 'removed' | 'changed' | 'same';
+  valueA?: unknown;
+  valueB?: unknown;
+};
+
+function _flattenJson(obj: unknown, prefix = ''): Record<string, unknown> {
+  if (obj === null || typeof obj !== 'object') return { [prefix || '.']: obj };
+  const result: Record<string, unknown> = {};
+  if (Array.isArray(obj)) {
+    for (let i = 0; i < (obj as unknown[]).length; i++) {
+      Object.assign(result, _flattenJson((obj as unknown[])[i], `${prefix}[${i}]`));
+    }
+  } else {
+    for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+      const path = prefix ? `${prefix}.${k}` : k;
+      if (v !== null && typeof v === 'object') {
+        Object.assign(result, _flattenJson(v, path));
+      } else {
+        result[path] = v;
+      }
+    }
+  }
+  return result;
+}
+
+export function compareJson(a: string, b: string): JsonDiffEntry[] {
+  const flatA = _flattenJson(JSON.parse(a));
+  const flatB = _flattenJson(JSON.parse(b));
+  const allKeys = new Set([...Object.keys(flatA), ...Object.keys(flatB)]);
+  const result: JsonDiffEntry[] = [];
+  for (const path of allKeys) {
+    const inA = path in flatA;
+    const inB = path in flatB;
+    if (inA && !inB) result.push({ path, type: 'removed', valueA: flatA[path] });
+    else if (!inA && inB) result.push({ path, type: 'added', valueB: flatB[path] });
+    else if (JSON.stringify(flatA[path]) !== JSON.stringify(flatB[path]))
+      result.push({ path, type: 'changed', valueA: flatA[path], valueB: flatB[path] });
+    else result.push({ path, type: 'same', valueA: flatA[path] });
+  }
+  return result.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+// ─── JSON Sorter ──────────────────────────────────────────────────────────────
+
+export function sortJsonKeys(obj: unknown, order: 'asc' | 'desc' = 'asc'): unknown {
+  if (Array.isArray(obj)) return (obj as unknown[]).map((v) => sortJsonKeys(v, order));
+  if (obj !== null && typeof obj === 'object') {
+    const keys = Object.keys(obj as Record<string, unknown>).sort((a, b) =>
+      order === 'asc' ? a.localeCompare(b) : b.localeCompare(a)
+    );
+    return Object.fromEntries(
+      keys.map((k) => [k, sortJsonKeys((obj as Record<string, unknown>)[k], order)])
+    );
+  }
+  return obj;
+}

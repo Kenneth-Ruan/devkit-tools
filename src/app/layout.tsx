@@ -7,7 +7,7 @@ import './globals.css';
 const geist = Geist({ variable: '--font-geist', subsets: ['latin'] });
 const mono = Geist_Mono({ variable: '--font-mono', subsets: ['latin'] });
 
-const BASE = 'https://devtooling.online';
+const BASE = 'https://www.devtooling.online';
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE),

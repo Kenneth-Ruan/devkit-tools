@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import SplitPane from '@/components/SplitPane';
+import JsonTree from '@/components/JsonTree';
 
 function stripJsonc(text: string): string {
   let result = '';
@@ -54,9 +55,20 @@ function LineGutter({ lines, errorLine, scrollRef }: { lines: string[]; errorLin
   );
 }
 
+function repairJson(s: string): string {
+  let r = s.trim();
+  // Remove trailing commas before ] or }
+  r = r.replace(/,\s*([}\]])/g, '$1');
+  // Replace single quotes with double quotes (naïve but handles simple cases)
+  r = r.replace(/([{,]\s*)'([^']+)'\s*:/g, '$1"$2":');
+  // Quote unquoted keys
+  r = r.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
+  return r;
+}
+
 export default function JsonFormatter() {
   const [input, setInput] = useState('');
-  const [mode, setMode] = useState<'format' | 'minify'>('format');
+  const [mode, setMode] = useState<'format' | 'minify' | 'tree'>('format');
   const [indent, setIndent] = useState('2');
   const [showLines, setShowLines] = useState(false);
   const [jsonc, setJsonc] = useState(false);
@@ -67,6 +79,7 @@ export default function JsonFormatter() {
 
   const { output, error, errorLoc } = useMemo(() => {
     if (!input.trim()) return { output: '', error: '', errorLoc: null };
+    if (mode === 'tree') return { output: input, error: '', errorLoc: null };
     try {
       const src = jsonc ? stripJsonc(input) : input;
       const parsed = JSON.parse(src);
@@ -136,12 +149,18 @@ export default function JsonFormatter() {
   );
 
   const outputPanel = (
-    <div>
+    <div className="flex flex-col h-full">
       <label className="text-xs text-slate-500 mb-1 block">Output</label>
-      {error ? (
+      {mode === 'tree' ? (
+        <JsonTree json={input} />
+      ) : error ? (
         <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-400 text-sm space-y-1">
           <p>{error}</p>
           {errorLoc && <p className="font-mono text-xs text-red-500">Line {errorLoc.line}, Col {errorLoc.col}</p>}
+          <button onClick={() => setInput(repairJson(input))}
+            className="text-xs text-yellow-400 hover:text-yellow-300 underline mt-1">
+            Try auto-repair
+          </button>
         </div>
       ) : showLines ? (
         <div className="flex rounded-lg overflow-hidden border border-[#2a2d3a] bg-[#0f1117]" style={{ minHeight: '18rem' }}>
@@ -168,6 +187,7 @@ export default function JsonFormatter() {
       <div className="flex gap-2 items-center flex-wrap">
         <button onClick={() => setMode('format')} className={mode === 'format' ? 'btn-primary' : 'btn-secondary'}>Format</button>
         <button onClick={() => setMode('minify')} className={mode === 'minify' ? 'btn-primary' : 'btn-secondary'}>Minify</button>
+        <button onClick={() => setMode('tree')} className={mode === 'tree' ? 'btn-primary' : 'btn-secondary'}>Tree</button>
         {mode === 'format' && (
           <label className="text-sm text-slate-400 flex items-center gap-2">
             Indent:

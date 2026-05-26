@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { parseMarkdown } from '@/lib/transforms';
 import SplitPane from '@/components/SplitPane';
 
@@ -41,38 +41,104 @@ const CHEATSHEET = [
 export default function MarkdownPreview() {
   const [input, setInput] = useState(SAMPLE);
   const [html, setHtml] = useState('');
+  const [syncScroll, setSyncScroll] = useState(true);
   const [showCheat, setShowCheat] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const isSyncingRef = useRef(false);
 
   useEffect(() => {
     setHtml(parseMarkdown(input));
   }, [input]);
 
+  const onEditorScroll = useCallback(() => {
+    if (!syncScroll || isSyncingRef.current || !textareaRef.current || !previewRef.current) return;
+    isSyncingRef.current = true;
+    const el = textareaRef.current;
+    const ratio = el.scrollTop / Math.max(1, el.scrollHeight - el.clientHeight);
+    const prev = previewRef.current;
+    prev.scrollTop = ratio * (prev.scrollHeight - prev.clientHeight);
+    requestAnimationFrame(() => { isSyncingRef.current = false; });
+  }, [syncScroll]);
+
+  const onPreviewScroll = useCallback(() => {
+    if (!syncScroll || isSyncingRef.current || !textareaRef.current || !previewRef.current) return;
+    isSyncingRef.current = true;
+    const prev = previewRef.current;
+    const ratio = prev.scrollTop / Math.max(1, prev.scrollHeight - prev.clientHeight);
+    const el = textareaRef.current;
+    el.scrollTop = ratio * (el.scrollHeight - el.clientHeight);
+    requestAnimationFrame(() => { isSyncingRef.current = false; });
+  }, [syncScroll]);
+
+  function exportHtml() {
+    const full = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exported Markdown</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #1e293b; }
+  pre { background: #f1f5f9; padding: 1em; border-radius: 6px; overflow-x: auto; }
+  code { background: #f1f5f9; padding: 0.2em 0.4em; border-radius: 3px; font-size: 0.9em; }
+  pre code { background: none; padding: 0; }
+  blockquote { border-left: 4px solid #6366f1; margin: 0; padding-left: 1em; color: #64748b; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #e2e8f0; padding: 8px 12px; }
+  th { background: #f8fafc; }
+  img { max-width: 100%; }
+</style>
+</head>
+<body>
+${html}
+</body>
+</html>`;
+    const blob = new Blob([full], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'document.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  const leftPanel = (
+    <div className="flex flex-col h-full">
+      <label className="text-xs text-slate-500 mb-1">Markdown</label>
+      <textarea
+        ref={textareaRef}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onScroll={onEditorScroll}
+        className="tool-textarea flex-1"
+        style={{ resize: 'none' }}
+        placeholder="# Hello, World!"
+      />
+    </div>
+  );
+
+  const rightPanel = (
+    <div className="flex flex-col h-full">
+      <label className="text-xs text-slate-500 mb-1">Preview</label>
+      <div
+        ref={previewRef}
+        onScroll={onPreviewScroll}
+        className="flex-1 bg-[#1a1d27] border border-[#2a2d3a] rounded-lg p-4 overflow-auto prose prose-invert prose-sm max-w-none"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </div>
+  );
+
   return (
     <div className="space-y-3">
-      <SplitPane
-        className="h-[calc(100vh-220px)]"
-        left={
-          <div className="flex flex-col h-full">
-            <label className="text-xs text-slate-500 mb-1">Markdown</label>
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="tool-textarea flex-1"
-              style={{ resize: 'none' }}
-              placeholder="# Hello, World!"
-            />
-          </div>
-        }
-        right={
-          <div className="flex flex-col h-full">
-            <label className="text-xs text-slate-500 mb-1">Preview</label>
-            <div
-              className="flex-1 bg-[#1a1d27] border border-[#2a2d3a] rounded-lg p-4 overflow-auto prose prose-invert prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
-          </div>
-        }
-      />
+      <div className="flex gap-2 items-center flex-wrap">
+        <button onClick={() => setSyncScroll((v) => !v)} className={syncScroll ? 'btn-primary' : 'btn-secondary'} title="Sync scroll position between editor and preview">
+          Sync Scroll
+        </button>
+        <button onClick={exportHtml} className="btn-secondary ml-auto">Export HTML</button>
+      </div>
+
+      <SplitPane className="h-[calc(100vh-260px)]" left={leftPanel} right={rightPanel} />
 
       <div>
         <button onClick={() => setShowCheat((v) => !v)} className={showCheat ? 'btn-primary' : 'btn-secondary'}>

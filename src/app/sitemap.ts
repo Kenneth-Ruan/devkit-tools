@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { TOOLS } from '@/lib/tools';
 
-const BASE = 'https://devtooling.online';
+const BASE = 'https://www.devtooling.online';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const toolRoutes = TOOLS.map((t) => ({

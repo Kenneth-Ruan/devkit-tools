@@ -3,16 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { TOOLS, CATEGORIES } from '@/lib/tools';
+import SponsorBanner from '@/components/SponsorBanner';
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'Dev Tooling Online',
-  url: 'https://devtooling.online',
+  url: 'https://www.devtooling.online',
   description: 'Free online developer tools: JSON formatter, Base64, URL encoder, timestamp converter, regex tester, and 25+ more. No login required.',
   potentialAction: {
     '@type': 'SearchAction',
-    target: 'https://devtooling.online/?q={search_term_string}',
+    target: 'https://www.devtooling.online/?q={search_term_string}',
     'query-input': 'required name=search_term_string',
   },
 };
@@ -86,7 +87,9 @@ export default function HomePage() {
         </div>
       )}
 
-      <footer className="mt-16 text-center text-xs text-slate-600">
+      <SponsorBanner />
+
+      <footer className="mt-2 text-center text-xs text-slate-600">
         Dev Tooling Online — free, lightweight developer utilities. Secure — no backends, no login required.
       </footer>
     </div>

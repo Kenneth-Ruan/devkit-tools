@@ -33,6 +33,19 @@ import TokenEstimator from '@/components/tools/TokenEstimator';
 import CronParser from '@/components/tools/CronParser';
 import DotenvParser from '@/components/tools/DotenvParser';
 import HttpStatus from '@/components/tools/HttpStatus';
+import JsonToXml from '@/components/tools/JsonToXml';
+import JsonToTsv from '@/components/tools/JsonToTsv';
+import XmlFormatter from '@/components/tools/XmlFormatter';
+import XmlToJson from '@/components/tools/XmlToJson';
+import XmlToCsv from '@/components/tools/XmlToCsv';
+import XmlToYaml from '@/components/tools/XmlToYaml';
+import CssFormatter from '@/components/tools/CssFormatter';
+import YamlToXml from '@/components/tools/YamlToXml';
+import YamlToCsv from '@/components/tools/YamlToCsv';
+import JsonCompare from '@/components/tools/JsonCompare';
+import JsonSorter from '@/components/tools/JsonSorter';
+import JsonEscape from '@/components/tools/JsonEscape';
+import XmlEscape from '@/components/tools/XmlEscape';
 
 const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   'json-formatter':   JsonFormatter,
@@ -65,6 +78,19 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   'cron-parser':      CronParser,
   'dotenv-parser':    DotenvParser,
   'http-status':      HttpStatus,
+  'json-to-xml':      JsonToXml,
+  'json-to-tsv':      JsonToTsv,
+  'xml-formatter':    XmlFormatter,
+  'xml-to-json':      XmlToJson,
+  'xml-to-csv':       XmlToCsv,
+  'xml-to-yaml':      XmlToYaml,
+  'css-formatter':    CssFormatter,
+  'yaml-to-xml':      YamlToXml,
+  'yaml-to-csv':      YamlToCsv,
+  'json-compare':     JsonCompare,
+  'json-sorter':      JsonSorter,
+  'json-escape':      JsonEscape,
+  'xml-escape':       XmlEscape,
 };
 
 export function generateStaticParams() {
@@ -100,7 +126,7 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: `${tool.name} | Dev Tooling Online`,
-    url: `https://devtooling.online/tools/${slug}`,
+    url: `https://www.devtooling.online/tools/${slug}`,
     description: tool.description,
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Any',
@@ -108,7 +134,7 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
   };
 
   return (
-    <ToolLayout name={tool.name} description={tool.description}>
+    <ToolLayout name={tool.name} description={tool.description} slug={slug}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Component />
     </ToolLayout>
